@@ -37,8 +37,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
-import com.admob.android.ads.AdView;
-
 public class EveryWordHelper extends Activity {
     private static final String TAG = "EveryWordHelper";
 
@@ -65,15 +63,6 @@ public class EveryWordHelper extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-
-        AdView adview = (AdView) findViewById(R.id.ad);
-        adview.setKeywords("amazon kindle word game dictionary");
-        adview.setVisibility(AdView.VISIBLE);
-
-        adview.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-            }
-        });
 
         TextView tvMinLength = (TextView) findViewById(R.id.tvMinLength);
         tvMinLength.setText(getString(R.string.current_min_length) + " " + minWordLength);
@@ -155,8 +144,6 @@ public class EveryWordHelper extends Activity {
                     }
                     adapter.notifyDataSetChanged();
                 }
-                AdView adview = (AdView) findViewById(R.id.ad);
-                adview.requestFreshAd();
                 return true;
             case R.id.setminlength:
                 final CharSequence[] items = { "3", "4" };

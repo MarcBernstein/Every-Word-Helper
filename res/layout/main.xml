@@ -3,11 +3,7 @@
 	xmlns:app="http://schemas.android.com/apk/res/com.mcbtech.everywordhelper"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
-	<com.admob.android.ads.AdView android:id="@+id/ad"
-		android:layout_alignParentTop="true" android:layout_width="fill_parent"
-		android:layout_height="wrap_content" app:backgroundColor="#000000"
-		app:primaryTextColor="#FFFFFF" app:secondaryTextColor="#CCCCCC" />
-	<TextView android:layout_below="@id/ad" android:textSize="14dip"
+	<TextView android:layout_alignParentTop="true" android:textSize="14dip"
 		android:text="Enter your Every Word letters here:" android:id="@+id/tvLabel"
 		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:gravity="center" />
