@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="app_name">Every Word Helper</string>
+<string name="about">Every Word Helper is Copyright 2010 by MCB Tech.\n
+\n
+The dictionary used in this app is the same one used in the Every Word (Copyright Amazon.com) game.\n
+\n
+Every Word Helper includes the 2+2gfreq list from 12dicts package created by Alan Beale, which is partially based on AGID.\n
+\n
+AGID is Copyright 2000 by Kevin Atkinson\n
+\n
+Permission to use, copy, modify, distribute and sell this database,
+the associated scripts, the output created form the scripts and its
+documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appears in all copies and
+that both that copyright notice and this permission notice appear in
+supporting documentation. Kevin Atkinson makes no representations
+about the suitability of this array for any purpose. It is provided
+"as is" without express or implied warranty.
+</string>
+<string name="current_min_length">Current minimum word length is</string>
+</resources>
