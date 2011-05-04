@@ -29,19 +29,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 
 public class EveryWordHelper extends Activity {
     private static final String TAG = "EveryWordHelper";
 
     private static final int PROGRESS_DIALOG = 0;
+
     private static final int TOTAL_WORDS = 29218;
+    private static final String TOTAL = "TOTAL";
 
     // Starting values for word length
     private int minWordLength = 3;
@@ -65,7 +67,7 @@ public class EveryWordHelper extends Activity {
         setContentView(R.layout.main);
 
         TextView tvMinLength = (TextView) findViewById(R.id.tvMinLength);
-        tvMinLength.setText(getString(R.string.current_min_length) + " " + minWordLength);
+        tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, minWordLength));
         final EditText e = (EditText) findViewById(R.id.etLetters);
 
         final ListView lv = (ListView) findViewById(R.id.lvResults);
@@ -78,7 +80,7 @@ public class EveryWordHelper extends Activity {
                 if (matchedWords.isEmpty()) {
                     e.setText("");
                     e.requestFocus();
-                    matchedWords.add("That's every word! You can enter a new set of letters now for the next round.");
+                    matchedWords.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
                     adapter.notifyDataSetChanged();
                 }
             }
@@ -91,13 +93,12 @@ public class EveryWordHelper extends Activity {
                 e.setText(letters);
 
                 if (letters.length() != 6 && letters.length() != 7) {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Invalid length of " + letters.length()
-                            + ". Should be 6 or 7 characters.", Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, letters.length()), Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
                 } else if (letters.contains(" ")) {
                     Toast toast = Toast.makeText(getApplicationContext(),
-                            "Invalid character(s) detected. Should only contain letters from A to Z", Toast.LENGTH_LONG);
+                            R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG);
                     toast.setGravity(Gravity.CENTER, 0, 0);
                     toast.show();
                 } else {
@@ -149,17 +150,17 @@ public class EveryWordHelper extends Activity {
                 final CharSequence[] items = { "3", "4" };
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Pick a minimum word length");
+                builder.setTitle(R.string.pick_a_minimum_word_length);
                 builder.setItems(items, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
                         minWordLength = Integer.valueOf(items[item].toString());
                         Toast toast = Toast
-                        .makeText(getApplicationContext(), "Set minimum word length to " + minWordLength, Toast.LENGTH_SHORT);
+                        .makeText(getApplicationContext(), getString(R.string.set_minimum_word_length_to_d, minWordLength), Toast.LENGTH_SHORT);
                         toast.setGravity(Gravity.CENTER, 0, 0);
                         toast.show();
 
                         TextView tvMinLength = (TextView) findViewById(R.id.tvMinLength);
-                        tvMinLength.setText(getString(R.string.current_min_length) + " " + minWordLength);
+                        tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, minWordLength));
                     }
                 });
                 AlertDialog alert = builder.create();
@@ -182,7 +183,7 @@ public class EveryWordHelper extends Activity {
                 progressDialog = new ProgressDialog(EveryWordHelper.this);
                 progressDialog.setMax(TOTAL_WORDS);
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                progressDialog.setMessage("Finding matching words...");
+                progressDialog.setMessage(getString(R.string.finding_matching_words));
                 progressDialog.setCancelable(false);
                 progressDialog.setProgress(0);
                 progressThread = new ProgressThread(handler);
@@ -206,7 +207,7 @@ public class EveryWordHelper extends Activity {
      * Shows size of results to user and updates the ListView.
      */
     private void updateResultsInUi() {
-        Toast toast = Toast.makeText(getApplicationContext(), "Found " + matchedWords.size() + " words. Touch a word to remove it from the list.", Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, matchedWords.size()), Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
         adapter.notifyDataSetChanged();
@@ -354,7 +355,7 @@ public class EveryWordHelper extends Activity {
     final Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            int total = msg.getData().getInt("total");
+            int total = msg.getData().getInt(TOTAL);
             progressDialog.setProgress(total);
             if (total >= TOTAL_WORDS) {
                 removeDialog(PROGRESS_DIALOG);
@@ -406,7 +407,7 @@ public class EveryWordHelper extends Activity {
                 }
                 Message msg = mHandler.obtainMessage();
                 Bundle b = new Bundle();
-                b.putInt("total", progressCount);
+                b.putInt(TOTAL, progressCount);
                 msg.setData(b);
                 mHandler.sendMessage(msg);
             }
