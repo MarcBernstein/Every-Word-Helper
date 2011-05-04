@@ -27,4 +27,8 @@ about the suitability of this array for any purpose. It is provided
 <string name="set_minimum_word_length_to_d">Set minimum word length to %d.</string>
 <string name="finding_matching_words">Finding matching words...</string>
 <string name="found_words_touch_a_word_to_remove_it_from_the_list">Found %d words. Touch a word to remove it from the list.</string>
+<string-array name="min_word_length_array">
+    <item>3</item>
+    <item>4</item>
+</string-array>
 </resources>

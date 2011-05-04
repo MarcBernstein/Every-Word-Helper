@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -68,39 +67,34 @@ public class EveryWordHelper extends Activity {
 
         TextView tvMinLength = (TextView) findViewById(R.id.tvMinLength);
         tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, minWordLength));
-        final EditText e = (EditText) findViewById(R.id.etLetters);
+        final EditText etLetters = (EditText) findViewById(R.id.etLetters);
 
-        final ListView lv = (ListView) findViewById(R.id.lvResults);
+        final ListView lvResults = (ListView) findViewById(R.id.lvResults);
         adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.list_item, matchedWords);
-        lv.setAdapter(adapter);
+        lvResults.setAdapter(adapter);
 
-        lv.setOnItemClickListener(new OnItemClickListener() {
+        lvResults.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 adapter.remove(matchedWords.get(position));
                 if (matchedWords.isEmpty()) {
-                    e.setText("");
-                    e.requestFocus();
+                    etLetters.setText("");
+                    etLetters.requestFocus();
                     matchedWords.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
                     adapter.notifyDataSetChanged();
                 }
             }
         });
 
-        Button b = (Button) findViewById(R.id.btnFind);
-        b.setOnClickListener(new View.OnClickListener() {
+        Button btnFind = (Button) findViewById(R.id.btnFind);
+        btnFind.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                letters = e.getText().toString().trim().toUpperCase();
-                e.setText(letters);
+                letters = etLetters.getText().toString().trim().toUpperCase();
+                etLetters.setText(letters);
 
                 if (letters.length() != 6 && letters.length() != 7) {
-                    Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, letters.length()), Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, letters.length()), Toast.LENGTH_LONG).show();
                 } else if (letters.contains(" ")) {
-                    Toast toast = Toast.makeText(getApplicationContext(),
-                            R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.CENTER, 0, 0);
-                    toast.show();
+                    Toast.makeText(getApplicationContext(), R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG).show();
                 } else {
                     // Clear out any old matched strings
                     if (!matchedWords.isEmpty()) {
@@ -147,20 +141,19 @@ public class EveryWordHelper extends Activity {
                 }
                 return true;
             case R.id.setminlength:
-                final CharSequence[] items = { "3", "4" };
+                final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.pick_a_minimum_word_length);
                 builder.setItems(items, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
                         minWordLength = Integer.valueOf(items[item].toString());
-                        Toast toast = Toast
-                        .makeText(getApplicationContext(), getString(R.string.set_minimum_word_length_to_d, minWordLength), Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.CENTER, 0, 0);
-                        toast.show();
 
                         TextView tvMinLength = (TextView) findViewById(R.id.tvMinLength);
                         tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, minWordLength));
+
+                        Toast.makeText(getApplicationContext(), getString(R.string.set_minimum_word_length_to_d, minWordLength), Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, getString(R.string.current_minimum_word_length_is_d, minWordLength));
                     }
                 });
                 AlertDialog alert = builder.create();
@@ -207,9 +200,7 @@ public class EveryWordHelper extends Activity {
      * Shows size of results to user and updates the ListView.
      */
     private void updateResultsInUi() {
-        Toast toast = Toast.makeText(getApplicationContext(), getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, matchedWords.size()), Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        toast.show();
+        Toast.makeText(getApplicationContext(), getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, matchedWords.size()), Toast.LENGTH_LONG).show();
         adapter.notifyDataSetChanged();
     }
 
