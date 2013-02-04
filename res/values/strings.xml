@@ -25,10 +25,13 @@ about the suitability of this array for any purpose. It is provided
 <string name="invalid_length_of_d_should_be_6_or_7_characters">Invalid length of %d. Should be 6 or 7 characters.</string>
 <string name="pick_a_minimum_word_length">Pick a minimum word length</string>
 <string name="set_minimum_word_length_to_d">Set minimum word length to %d.</string>
-<string name="finding_matching_words">Finding matching words...</string>
+<string name="finding_matching_words">Finding matching words&#8230;</string>
 <string name="found_words_touch_a_word_to_remove_it_from_the_list">Found %d words. Touch a word to remove it from the list.</string>
 <string-array name="min_word_length_array">
     <item>3</item>
     <item>4</item>
 </string-array>
+    <string name="enter_your_every_word_letters_here">Enter your Every Word letters here:</string>
+    <string name="example_abcdef_or_abcdefg">Example: abcdef or abcdefg</string>
+    <string name="find_every_word">Find Every Word</string>
 </resources>

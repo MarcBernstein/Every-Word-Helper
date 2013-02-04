@@ -5,12 +5,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import android.app.Activity;
@@ -55,9 +57,9 @@ public class EveryWordHelper extends Activity {
 
     final Handler mHandler = new Handler();
 
-    private ProgressThread progressThread;
-    private ProgressDialog progressDialog;
-    private int progressCount = 0;
+    ProgressThread progressThread;
+    ProgressDialog progressDialog;
+    int progressCount = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,7 +90,7 @@ public class EveryWordHelper extends Activity {
         Button btnFind = (Button) findViewById(R.id.btnFind);
         btnFind.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                letters = etLetters.getText().toString().trim().toUpperCase();
+                letters = etLetters.getText().toString().trim().toUpperCase(Locale.US);
                 etLetters.setText(letters);
 
                 if (letters.length() != 6 && letters.length() != 7) {
@@ -343,18 +345,7 @@ public class EveryWordHelper extends Activity {
     /**
      *  Define the Handler that receives messages from the thread and update the progress
      */
-    final Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            int total = msg.getData().getInt(TOTAL);
-            progressDialog.setProgress(total);
-            if (total >= TOTAL_WORDS) {
-                removeDialog(PROGRESS_DIALOG);
-                progressThread.setState(ProgressThread.STATE_DONE);
-
-            }
-        }
-    };
+    final Handler handler = new MyInnerHandler(this);
 
     /**
      * String comparator that checks length of 2 strings.
@@ -406,6 +397,27 @@ public class EveryWordHelper extends Activity {
 
         public void setState(int state) {
             mState = state;
+        }
+    }
+    
+    static class MyInnerHandler extends Handler{
+
+    	WeakReference<EveryWordHelper> mActivity;
+    	
+    	public MyInnerHandler(EveryWordHelper activity) {
+			mActivity = new WeakReference<EveryWordHelper>(activity);
+		}
+    	
+        @Override
+        public void handleMessage(Message message) {
+        	EveryWordHelper activity = mActivity.get(); 
+            int total = message.getData().getInt(TOTAL);
+            activity.progressDialog.setProgress(total);
+            if (total >= TOTAL_WORDS) {
+            	activity.removeDialog(PROGRESS_DIALOG);
+            	activity.progressThread.setState(ProgressThread.STATE_DONE);
+
+            }
         }
     }
 }
