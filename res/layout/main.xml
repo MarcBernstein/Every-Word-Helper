@@ -1,68 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/tvLabel"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:gravity="center"
-        android:text="@string/enter_your_every_word_letters_here"
-        android:textSize="14sp" />
+	<TextView
+		android:id="@+id/instructions_textview"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentTop="true"
+		android:gravity="center"
+		android:padding="1dp"
+		android:text="@string/enter_your_every_word_letters_here"
+		android:textSize="14sp" />
 
-    <TextView
-        android:id="@+id/tvLabel2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tvLabel"
-        android:gravity="center"
-        android:text="@string/example_abcdef_or_abcdefg"
-        android:textSize="12sp" />
+	<TextView
+		android:id="@+id/example_textview"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/instructions_textview"
+		android:gravity="center"
+		android:padding="1dp"
+		android:text="@string/example_abcdef_or_abcdefg"
+		android:textSize="12sp" />
 
-    <LinearLayout
-        android:id="@+id/llEnter"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tvLabel2"
-        android:orientation="horizontal" >
+	<LinearLayout
+		android:id="@+id/enter_letters_layout"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/example_textview"
+		android:orientation="horizontal" >
 
-        <EditText
-            android:id="@+id/etLetters"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight=".9"
-            android:gravity="center"
-            android:inputType="text"
-            android:selectAllOnFocus="true"
-            android:typeface="monospace" />
+		<EditText
+			android:id="@+id/letters_edittext"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center"
+			android:layout_weight=".9"
+			android:gravity="center"
+			android:inputType="text"
+			android:selectAllOnFocus="true"
+			android:typeface="monospace" />
 
-        <Button
-            android:id="@+id/btnFind"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight=".1"
-            android:text="@string/find_every_word"
-            android:textSize="14sp" />
-    </LinearLayout>
+		<Button
+			android:id="@+id/find_words_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_weight=".1"
+			android:text="@string/find_every_word"
+			android:textSize="14sp" />
+	</LinearLayout>
 
-    <TextView
-        android:id="@+id/tvMinLength"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/llEnter"
-        android:gravity="center"
-        android:textSize="10sp" />
+	<TextView
+		android:id="@+id/minimum_length_textview"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/enter_letters_layout"
+		android:gravity="center"
+		android:padding="1dp"
+		android:textSize="12sp"
+		tools:ignore="SelectableText" />
 
-    <ListView
-        android:id="@+id/lvResults"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tvMinLength"
-        tools:listitem="@layout/list_item" />
+	<ListView
+		android:id="@+id/results_listview"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/minimum_length_textview"
+		android:padding="1dp"
+		tools:listitem="@layout/list_item" />
 
 </RelativeLayout>

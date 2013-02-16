@@ -35,5 +35,8 @@ about the suitability of this array for any purpose. It is provided
     <string name="enter_your_every_word_letters_here">Enter your Every Word letters here:</string>
     <string name="example_abcdef_or_abcdefg">Example: abcdef or abcdefg</string>
     <string name="find_every_word">Find Every Word</string>
+    <string name="set_minimum_word_length">Set Minimum Word Length</string>
+    <string name="start_over">Start Over</string>
+    <string name="menu_about">About...</string>
 
 </resources>
