@@ -20,6 +20,9 @@ import java.util.List;
 
 import android.os.Bundle;
 
+/**
+ * @author Marc Bernstein (github@marcanderica.org)
+ */
 public class SaveStateHelper {
 	private static final String KEY_MATCHED_WORDS = "KEY_MATCHED_WORDS";
 

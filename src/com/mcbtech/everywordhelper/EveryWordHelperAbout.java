@@ -20,6 +20,9 @@ import android.os.Bundle;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.MenuItem;
 
+/**
+ * @author Marc Bernstein (github@marcanderica.org)
+ */
 public class EveryWordHelperAbout extends SherlockFragmentActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

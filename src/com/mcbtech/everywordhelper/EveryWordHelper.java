@@ -58,8 +58,7 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
 /**
- * @author marc
- * 
+ * @author Marc Bernstein (github@marcanderica.org)
  */
 public class EveryWordHelper extends SherlockFragmentActivity {
 
@@ -67,7 +66,6 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 
 	private static final int TOTAL_WORDS = 29218;
 
-	// Starting values for word length
 	private int mMinWordLength = 3;
 
 	private int mMaxWordLength = 6;
@@ -174,6 +172,47 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 		SaveStateHelper.save(outState, mLetters, mMinWordLength, mMatchedWords);
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getSupportMenuInflater();
+		inflater.inflate(R.menu.menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.reset) {
+			EditText e = (EditText) findViewById(R.id.letters_edittext);
+			e.setText("");
+			mMatchedWords.clear();
+			mAdapter.notifyDataSetChanged();
+			return true;
+		} else if (itemId == R.id.setminlength) {
+			final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.pick_a_minimum_word_length);
+			builder.setItems(items, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int item) {
+					mMinWordLength = Integer.valueOf(items[item].toString());
+
+					TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
+					tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
+				}
+			});
+			AlertDialog alert = builder.create();
+			alert.show();
+			return true;
+		} else if (itemId == R.id.about) {
+			Intent intent = new Intent(this, EveryWordHelperAbout.class);
+			startActivity(intent);
+			return true;
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
 	/**
 	 * Uses a Set to see if a previous instance of this word has already been added.
 	 * 
@@ -224,60 +263,19 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 		return valid;
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getSupportMenuInflater();
-		inflater.inflate(R.menu.menu, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		int itemId = item.getItemId();
-		if (itemId == R.id.reset) {
-			EditText e = (EditText) findViewById(R.id.letters_edittext);
-			e.setText("");
-			mMatchedWords.clear();
-			mAdapter.notifyDataSetChanged();
-			return true;
-		} else if (itemId == R.id.setminlength) {
-			final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.pick_a_minimum_word_length);
-			builder.setItems(items, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int item) {
-					mMinWordLength = Integer.valueOf(items[item].toString());
-
-					TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
-					tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.show();
-			return true;
-		} else if (itemId == R.id.about) {
-			Intent intent = new Intent(this, EveryWordHelperAbout.class);
-			startActivity(intent);
-			return true;
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
 	/**
 	 * String comparator that checks length of 2 strings.
 	 */
-	private class ComparatorEx implements Comparator<String> {
+	private class StringLengthComparator implements Comparator<String> {
 		@Override
 		public int compare(String s1, String s2) {
 			if (s1.length() > s2.length()) {
 				return 1;
 			} else if (s1.length() < s2.length()) {
 				return -1;
-			} else {
-				return 0;
 			}
+
+			return 0;
 		}
 	}
 
@@ -285,17 +283,14 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 
 		private final ProgressDialog progressDialog;
 
-		private int mProgressCount;
+		private int mProgressCount = 0;
 
 		public FindWordsTask() {
-			mProgressCount = 0;
-
 			progressDialog = new ProgressDialog(EveryWordHelper.this);
 			progressDialog.setMax(TOTAL_WORDS);
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progressDialog.setMessage(getString(R.string.finding_matching_words));
+			progressDialog.setTitle(getString(R.string.finding_matching_words));
 			progressDialog.setCancelable(false);
-			progressDialog.setProgress(0);
 		}
 
 		@Override
@@ -308,6 +303,7 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 			if (mAllWords == null || mAllWords.isEmpty()) {
 				mAllWords = populateList();
 			}
+
 			getWords(mAllWords);
 
 			return null;
@@ -412,7 +408,7 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 				onProgressUpdate(mProgressCount++);
 			}
 
-			Collections.sort(mMatchedWords, new ComparatorEx());
+			Collections.sort(mMatchedWords, new StringLengthComparator());
 			removeDuplicateWithOrder(mMatchedWords);
 		}
 	}
