@@ -15,29 +15,34 @@
 
 package com.mcbtech.everywordhelper;
 
+import android.app.Dialog;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.app.SherlockDialogFragment;
 
 /**
  * @author Marc Bernstein (github@marcanderica.org)
  */
-public class EveryWordHelperAbout extends SherlockFragmentActivity {
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.about);
-		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+public class AboutDialogFragment extends SherlockDialogFragment {
+
+	public static final String TAG = AboutDialogFragment.class.getSimpleName();
+
+	public static AboutDialogFragment newInstance() {
+		return new AboutDialogFragment();
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == android.R.id.home) {
-			finish();
-			return true;
-		}
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		return inflater.inflate(R.layout.about, container, false);
+	}
 
-		return super.onOptionsItemSelected(item);
+	@Override
+	public Dialog onCreateDialog(Bundle savedInstanceState) {
+		Dialog dialog = super.onCreateDialog(savedInstanceState);
+		dialog.setTitle(R.string.about_title);
+		return dialog;
 	}
 }

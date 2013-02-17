@@ -23,8 +23,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -33,12 +33,12 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -60,15 +60,14 @@ import com.actionbarsherlock.view.MenuItem;
 /**
  * @author Marc Bernstein (github@marcanderica.org)
  */
-public class EveryWordHelper extends SherlockFragmentActivity {
+public class EveryWordHelper extends SherlockFragmentActivity implements OnClickListener, OnItemClickListener,
+		OnEditorActionListener, OnKeyListener {
 
 	private static final String TAG = EveryWordHelper.class.getSimpleName();
 
 	private static final int TOTAL_WORDS = 29218;
 
 	private int mMinWordLength = 3;
-
-	private int mMaxWordLength = 6;
 
 	private ArrayAdapter<String> mAdapter;
 
@@ -77,6 +76,12 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 	private List<String> mMatchedWords;
 
 	private String mLetters;
+
+	private static final int MAX_WORD_LENGTH = 7;
+
+	private static final int MIN_WORD_LENGTH = 6;
+
+	private EditText mLettersEditText;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -93,83 +98,88 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 			mMatchedWords = new ArrayList<String>();
 		}
 
-		TextView minLengthTV = (TextView) findViewById(R.id.minimum_length_textview);
-		minLengthTV.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
+		mLettersEditText = (EditText) findViewById(R.id.letters_edittext);
+		mLettersEditText.setText(mLetters == null ? "" : mLetters);
+		mLettersEditText.setOnEditorActionListener(this);
+		mLettersEditText.setOnKeyListener(this);
 
 		final Button findWordsBtn = (Button) findViewById(R.id.find_words_button);
-		final EditText lettersET = (EditText) findViewById(R.id.letters_edittext);
-		final ListView resultsLV = (ListView) findViewById(R.id.results_listview);
-		mAdapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.list_item, mMatchedWords);
-		resultsLV.setAdapter(mAdapter);
-
-		lettersET.setText(mLetters == null ? "" : mLetters);
-		lettersET.setOnEditorActionListener(new OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-				if (actionId == EditorInfo.IME_ACTION_DONE) {
-					findWordsBtn.performClick();
-					return true;
-				}
-				return false;
-			}
-		});
-
-		lettersET.setOnKeyListener(new OnKeyListener() {
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event) {
-				if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-					findWordsBtn.performClick();
-					return true;
-				}
-				return false;
-			}
-		});
-
-		resultsLV.setOnItemClickListener(new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				mAdapter.remove(mMatchedWords.get(position));
-				if (mMatchedWords.isEmpty()) {
-					lettersET.setText("");
-					mMatchedWords
-							.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
-					mAdapter.notifyDataSetChanged();
-				}
-			}
-		});
-
 		findWordsBtn.requestFocus();
-		findWordsBtn.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mLetters = lettersET.getText().toString().trim().toUpperCase(Locale.US);
-				lettersET.setText(mLetters);
+		findWordsBtn.setOnClickListener(this);
 
-				if (mLetters.length() != 6 && mLetters.length() != 7) {
-					Toast
-							.makeText(getApplicationContext(),
-									getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, mLetters.length()),
-									Toast.LENGTH_LONG).show();
-				} else if (mLetters.contains(" ")) {
-					Toast.makeText(getApplicationContext(),
-							R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG).show();
-				} else {
-					InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.hideSoftInputFromWindow(lettersET.getWindowToken(), 0);
+		final ListView resultsLV = (ListView) findViewById(R.id.results_listview);
+		mAdapter = new ArrayAdapter<String>(this, R.layout.list_item, mMatchedWords);
+		resultsLV.setAdapter(mAdapter);
+		resultsLV.setOnItemClickListener(this);
 
-					// Clear out any old matched strings
-					mMatchedWords.clear();
-					mMaxWordLength = mLetters.length();
-					new FindWordsTask().execute();
-				}
-			}
-		});
+		final TextView minLengthTV = (TextView) findViewById(R.id.minimum_length_textview);
+		minLengthTV.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		SaveStateHelper.save(outState, mLetters, mMinWordLength, mMatchedWords);
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		mAdapter.remove(mMatchedWords.get(position));
+		if (mMatchedWords.isEmpty()) {
+			mLettersEditText.setText("");
+			mMatchedWords
+					.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
+			mAdapter.notifyDataSetChanged();
+		}
+	}
+
+	@Override
+	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		if (actionId == EditorInfo.IME_ACTION_DONE) {
+			findWords();
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean onKey(View v, int keyCode, KeyEvent event) {
+		if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+			findWords();
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public void onClick(View view) {
+		int viewId = view.getId();
+		if (viewId == R.id.find_words_button) {
+			findWords();
+		}
+	}
+
+	private void findWords() {
+		mLetters = mLettersEditText.getText().toString().trim().toUpperCase(Locale.US);
+		mLettersEditText.setText(mLetters);
+
+		final int lettersLength = mLetters.length();
+		if (lettersLength < MIN_WORD_LENGTH || lettersLength > MAX_WORD_LENGTH) {
+			Toast.makeText(getApplicationContext(),
+					getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, lettersLength), Toast.LENGTH_LONG).show();
+		} else if (mLetters.contains(" ")) {
+			Toast.makeText(getApplicationContext(),
+					R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG).show();
+		} else {
+			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			imm.hideSoftInputFromWindow(mLettersEditText.getWindowToken(), 0);
+
+			// Clear out any old matched strings
+			mMatchedWords.clear();
+			new FindWordsTask().execute();
+		}
 	}
 
 	@Override
@@ -183,52 +193,52 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int itemId = item.getItemId();
 		if (itemId == R.id.reset) {
-			EditText e = (EditText) findViewById(R.id.letters_edittext);
-			e.setText("");
-			mMatchedWords.clear();
-			mAdapter.notifyDataSetChanged();
+			reset();
 			return true;
 		} else if (itemId == R.id.setminlength) {
-			final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.pick_a_minimum_word_length);
-			builder.setItems(items, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int item) {
-					mMinWordLength = Integer.valueOf(items[item].toString());
-
-					TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
-					tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
-				}
-			});
-			AlertDialog alert = builder.create();
-			alert.show();
+			setMinimumWordLength();
 			return true;
 		} else if (itemId == R.id.about) {
-			Intent intent = new Intent(this, EveryWordHelperAbout.class);
-			startActivity(intent);
+			showAboutDialog();
 			return true;
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
 
-	/**
-	 * Uses a Set to see if a previous instance of this word has already been added.
-	 * 
-	 * @param arlList
-	 */
-	public static void removeDuplicateWithOrder(List<String> arlList) {
-		Set<String> set = new HashSet<String>();
-		List<String> newList = new ArrayList<String>();
-		for (Iterator<String> iter = arlList.iterator(); iter.hasNext();) {
-			String element = iter.next();
-			if (set.add(element)) {
-				newList.add(element);
-			}
+	private void showAboutDialog() {
+		AboutDialogFragment aboutDialogFragment = (AboutDialogFragment) getSupportFragmentManager().findFragmentByTag(
+				AboutDialogFragment.TAG);
+
+		if (aboutDialogFragment == null) {
+			aboutDialogFragment = AboutDialogFragment.newInstance();
 		}
-		arlList.clear();
-		arlList.addAll(newList);
+
+		aboutDialogFragment.show(getSupportFragmentManager(), AboutDialogFragment.TAG);
+	}
+
+	private void setMinimumWordLength() {
+		final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.pick_a_minimum_word_length);
+		builder.setItems(items, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int item) {
+				mMinWordLength = Integer.valueOf(items[item].toString());
+
+				TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
+				tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
+			}
+		});
+		AlertDialog alert = builder.create();
+		alert.show();
+	}
+
+	private void reset() {
+		EditText e = (EditText) findViewById(R.id.letters_edittext);
+		e.setText("");
+		mMatchedWords.clear();
+		mAdapter.notifyDataSetChanged();
 	}
 
 	/**
@@ -392,7 +402,7 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 					}
 					break;
 				case 7:
-					if (mMaxWordLength == 7 && word.matches(regex7)) {
+					if (mLetters.length() == MAX_WORD_LENGTH && word.matches(regex7)) {
 						matched = true;
 					}
 					break;
@@ -409,7 +419,18 @@ public class EveryWordHelper extends SherlockFragmentActivity {
 			}
 
 			Collections.sort(mMatchedWords, new StringLengthComparator());
-			removeDuplicateWithOrder(mMatchedWords);
+			removeDuplicateWithOrder();
+		}
+
+		/**
+		 * Uses a Set to see if a previous instance of this word has already been added.
+		 * 
+		 * @param arlList
+		 */
+		public void removeDuplicateWithOrder() {
+			Set<String> removeDupesSet = new LinkedHashSet<String>(mMatchedWords);
+			mMatchedWords.clear();
+			mMatchedWords.addAll(removeDupesSet);
 		}
 	}
 }
