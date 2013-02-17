@@ -24,7 +24,6 @@ about the suitability of this array for any purpose. It is provided
 	<string name="invalid_character_s_detected_should_only_contain_letters_from_a_to_z">Invalid character\(s\) detected. Should only contain letters from A to Z</string>
 	<string name="invalid_length_of_d_should_be_6_or_7_characters">Invalid length of %d. Should be 6 or 7 characters.</string>
 	<string name="pick_a_minimum_word_length">Pick a minimum word length</string>
-	<string name="set_minimum_word_length_to_d">Set minimum word length to %d.</string>
 	<string name="finding_matching_words">Finding matching words&#8230;</string>
 	<string name="found_words_touch_a_word_to_remove_it_from_the_list">Found %d words. Touch a word to remove it from the list.</string>
 
