@@ -424,8 +424,7 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 
 		/**
 		 * Uses a Set to see if a previous instance of this word has already been added.
-		 * 
-		 * @param arlList
+		 *
 		 */
 		public void removeDuplicateWithOrder() {
 			Set<String> removeDupesSet = new LinkedHashSet<String>(mMatchedWords);
