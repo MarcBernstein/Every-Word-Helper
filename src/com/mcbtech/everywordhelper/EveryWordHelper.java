@@ -56,12 +56,13 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.newrelic.agent.android.NewRelic;
 
 /**
  * @author Marc Bernstein (github@marcanderica.org)
  */
 public class EveryWordHelper extends SherlockFragmentActivity implements OnClickListener, OnItemClickListener,
-		OnEditorActionListener, OnKeyListener {
+OnEditorActionListener, OnKeyListener {
 
 	private static final String TAG = EveryWordHelper.class.getSimpleName();
 
@@ -87,6 +88,8 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+
+		NewRelic.withApplicationToken(getString(R.string.new_relic_app_id)).start(this.getApplication());
 
 		if (savedInstanceState != null) {
 			mLetters = SaveStateHelper.restoreLetters(savedInstanceState);
@@ -128,9 +131,9 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 		if (mMatchedWords.isEmpty()) {
 			mLettersEditText.setText("");
 			mMatchedWords
-					.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
-			mAdapter.notifyDataSetChanged();
+			.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
 		}
+		mAdapter.notifyDataSetChanged();
 	}
 
 	@Override
@@ -178,6 +181,7 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 
 			// Clear out any old matched strings
 			mMatchedWords.clear();
+			mAdapter.notifyDataSetChanged();
 			new FindWordsTask().execute();
 		}
 	}
@@ -289,7 +293,7 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 		}
 	}
 
-	public class FindWordsTask extends AsyncTask<Void, Integer, Void> {
+	public class FindWordsTask extends AsyncTask<Void, Integer, List<String>> {
 
 		private final ProgressDialog progressDialog;
 
@@ -309,14 +313,12 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 		}
 
 		@Override
-		protected Void doInBackground(final Void... args) {
+		protected List<String> doInBackground(final Void... args) {
 			if (mAllWords == null || mAllWords.isEmpty()) {
 				mAllWords = populateList();
 			}
 
-			getWords(mAllWords);
-
-			return null;
+			return getWords(mAllWords);
 		}
 
 		@Override
@@ -325,15 +327,23 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 		}
 
 		@Override
-		protected void onPostExecute(final Void result) {
+		protected void onPostExecute(final List<String> result) {
 			if (progressDialog.isShowing()) {
 				progressDialog.dismiss();
 			}
 
-			Toast.makeText(getApplicationContext(),
-					getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, mMatchedWords.size()),
-					Toast.LENGTH_LONG).show();
+			mMatchedWords.clear();
+			mMatchedWords.addAll(result);
 			mAdapter.notifyDataSetChanged();
+
+			String toastMessage = null;
+			if (mMatchedWords.isEmpty()) {
+				toastMessage = getString(R.string.no_words_found);
+			} else {
+				toastMessage = getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, mMatchedWords.size());
+			}
+
+			Toast.makeText(getApplicationContext(), toastMessage, Toast.LENGTH_LONG).show();
 		}
 
 		/**
@@ -366,8 +376,11 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 		 * 
 		 * @param allWords
 		 *          - Parsed results of 2+2gfreq word list.
+		 * @return
 		 */
-		private void getWords(final List<String> allWords) {
+		private List<String> getWords(final List<String> allWords) {
+			List<String> ret = new ArrayList<String>();
+
 			String word;
 			String regex3 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "]";
 			String regex4 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]";
@@ -411,25 +424,28 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
 				}
 
 				if (matched && checkForDoubles(word)) {
-					mMatchedWords.add(word);
+					ret.add(word);
 					Log.d(TAG, word);
 				}
 				matched = false;
 				onProgressUpdate(mProgressCount++);
 			}
 
-			Collections.sort(mMatchedWords, new StringLengthComparator());
-			removeDuplicateWithOrder();
+			Collections.sort(ret, new StringLengthComparator());
+			removeDuplicateWithOrder(ret);
+
+			return ret;
 		}
 
 		/**
 		 * Uses a Set to see if a previous instance of this word has already been added.
+		 * @param words
 		 *
 		 */
-		public void removeDuplicateWithOrder() {
-			Set<String> removeDupesSet = new LinkedHashSet<String>(mMatchedWords);
-			mMatchedWords.clear();
-			mMatchedWords.addAll(removeDupesSet);
+		public void removeDuplicateWithOrder(List<String> words) {
+			Set<String> removeDupesSet = new LinkedHashSet<String>(words);
+			words.clear();
+			words.addAll(removeDupesSet);
 		}
 	}
 }
