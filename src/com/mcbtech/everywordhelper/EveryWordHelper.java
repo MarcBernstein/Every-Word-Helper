@@ -56,6 +56,8 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.newrelic.agent.android.NewRelic;
 
 /**
@@ -89,7 +91,8 @@ OnEditorActionListener, OnKeyListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		NewRelic.withApplicationToken(getString(R.string.new_relic_app_id)).start(this.getApplication());
+        NewRelic.withApplicationToken(getString(R.string.new_relic_app_id)).start(this.getApplication());
+        ImmutableList<String> e;
 
 		if (savedInstanceState != null) {
 			mLetters = SaveStateHelper.restoreLetters(savedInstanceState);
