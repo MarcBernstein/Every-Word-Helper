@@ -15,27 +15,13 @@
 
 package com.mcbtech.everywordhelper;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Editable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -56,399 +42,410 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.newrelic.agent.android.NewRelic;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * @author Marc Bernstein (github@marcanderica.org)
  */
 public class EveryWordHelper extends SherlockFragmentActivity implements OnClickListener, OnItemClickListener,
-OnEditorActionListener, OnKeyListener {
+        OnEditorActionListener, OnKeyListener {
 
-	private static final String TAG = EveryWordHelper.class.getSimpleName();
+    // public static final String TAG = EveryWordHelper.class.getSimpleName();
 
-	private static final int TOTAL_WORDS = 29218;
+    private static final int TOTAL_WORDS = 29218;
 
-	private int mMinWordLength = 3;
+    private int mMinWordLength = 3;
 
-	private ArrayAdapter<String> mAdapter;
+    private ArrayAdapter<String> mAdapter;
 
-	private List<String> mAllWords;
+    private List<String> mAllWords;
 
-	private List<String> mMatchedWords;
+    private List<String> mMatchedWords;
 
-	private String mLetters;
+    private String mLetters;
 
-	private static final int MAX_WORD_LENGTH = 7;
+    private static final int MAX_WORD_LENGTH = 7;
 
-	private static final int MIN_WORD_LENGTH = 6;
+    private static final int MIN_WORD_LENGTH = 6;
 
-	private EditText mLettersEditText;
+    private EditText mLettersEditText;
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
 
         NewRelic.withApplicationToken(getString(R.string.new_relic_app_id)).start(this.getApplication());
-        ImmutableList<String> e;
 
-		if (savedInstanceState != null) {
-			mLetters = SaveStateHelper.restoreLetters(savedInstanceState);
-			mMinWordLength = SaveStateHelper.restoreMinWordLength(savedInstanceState);
-			mMatchedWords = SaveStateHelper.restoreMatchedWords(savedInstanceState);
-		}
+        if (savedInstanceState != null) {
+            mLetters = SaveStateHelper.restoreLetters(savedInstanceState);
+            mMinWordLength = SaveStateHelper.restoreMinWordLength(savedInstanceState);
+            mMatchedWords = SaveStateHelper.restoreMatchedWords(savedInstanceState);
+        }
 
-		if (mMatchedWords == null) {
-			mMatchedWords = new ArrayList<String>();
-		}
+        if (mMatchedWords == null) {
+            mMatchedWords = new ArrayList<String>();
+        }
 
-		mLettersEditText = (EditText) findViewById(R.id.letters_edittext);
-		mLettersEditText.setText(mLetters == null ? "" : mLetters);
-		mLettersEditText.setOnEditorActionListener(this);
-		mLettersEditText.setOnKeyListener(this);
+        mLettersEditText = (EditText) findViewById(R.id.letters_edittext);
+        mLettersEditText.setText(mLetters == null ? "" : mLetters);
+        mLettersEditText.setOnEditorActionListener(this);
+        mLettersEditText.setOnKeyListener(this);
 
-		final Button findWordsBtn = (Button) findViewById(R.id.find_words_button);
-		findWordsBtn.requestFocus();
-		findWordsBtn.setOnClickListener(this);
+        final Button findWordsBtn = (Button) findViewById(R.id.find_words_button);
+        findWordsBtn.requestFocus();
+        findWordsBtn.setOnClickListener(this);
 
-		final ListView resultsLV = (ListView) findViewById(R.id.results_listview);
-		mAdapter = new ArrayAdapter<String>(this, R.layout.list_item, mMatchedWords);
-		resultsLV.setAdapter(mAdapter);
-		resultsLV.setOnItemClickListener(this);
+        final ListView resultsLV = (ListView) findViewById(R.id.results_listview);
+        mAdapter = new ArrayAdapter<String>(this, R.layout.list_item, mMatchedWords);
+        resultsLV.setAdapter(mAdapter);
+        resultsLV.setOnItemClickListener(this);
 
-		final TextView minLengthTV = (TextView) findViewById(R.id.minimum_length_textview);
-		minLengthTV.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
-	}
+        final TextView minLengthTV = (TextView) findViewById(R.id.minimum_length_textview);
+        minLengthTV.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
+    }
 
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		SaveStateHelper.save(outState, mLetters, mMinWordLength, mMatchedWords);
-	}
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        SaveStateHelper.save(outState, mLetters, mMinWordLength, mMatchedWords);
+    }
 
-	@Override
-	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-		mAdapter.remove(mMatchedWords.get(position));
-		if (mMatchedWords.isEmpty()) {
-			mLettersEditText.setText("");
-			mMatchedWords
-			.add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
-		}
-		mAdapter.notifyDataSetChanged();
-	}
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        mAdapter.remove(mMatchedWords.get(position));
+        if (mMatchedWords.isEmpty()) {
+            mLettersEditText.setText("");
+            mMatchedWords
+                    .add(getString(R.string.that_s_every_word_you_can_enter_a_new_set_of_letters_now_for_the_next_round));
+        }
+        mAdapter.notifyDataSetChanged();
+    }
 
-	@Override
-	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		if (actionId == EditorInfo.IME_ACTION_DONE) {
-			findWords();
-			return true;
-		}
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            findWords();
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-			findWords();
-			return true;
-		}
+    @Override
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+            findWords();
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public void onClick(View view) {
-		int viewId = view.getId();
-		if (viewId == R.id.find_words_button) {
-			findWords();
-		}
-	}
+    @Override
+    public void onClick(View view) {
+        int viewId = view.getId();
+        if (viewId == R.id.find_words_button) {
+            findWords();
+        }
+    }
 
-	private void findWords() {
-		mLetters = mLettersEditText.getText().toString().trim().toUpperCase(Locale.US);
-		mLettersEditText.setText(mLetters);
+    private void findWords() {
+        if (mLettersEditText.getText() != null) {
+            mLetters = mLettersEditText.getText().toString().trim().toUpperCase(Locale.US);
+            mLettersEditText.setText(mLetters);
+        }
 
-		final int lettersLength = mLetters.length();
-		if (lettersLength < MIN_WORD_LENGTH || lettersLength > MAX_WORD_LENGTH) {
-			Toast.makeText(getApplicationContext(),
-					getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, lettersLength), Toast.LENGTH_LONG).show();
-		} else if (mLetters.contains(" ")) {
-			Toast.makeText(getApplicationContext(),
-					R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG).show();
-		} else {
-			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			imm.hideSoftInputFromWindow(mLettersEditText.getWindowToken(), 0);
+        final int lettersLength = mLetters.length();
+        if (lettersLength < MIN_WORD_LENGTH || lettersLength > MAX_WORD_LENGTH) {
+            Toast.makeText(this,
+                    getString(R.string.invalid_length_of_d_should_be_6_or_7_characters, lettersLength), Toast.LENGTH_LONG).show();
+        } else if (mLetters.contains(" ")) {
+            Toast.makeText(this, R.string.invalid_character_s_detected_should_only_contain_letters_from_a_to_z, Toast.LENGTH_LONG).show();
+        } else {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(mLettersEditText.getWindowToken(), 0);
 
-			// Clear out any old matched strings
-			mMatchedWords.clear();
-			mAdapter.notifyDataSetChanged();
-			new FindWordsTask().execute();
-		}
-	}
+            // Clear out any old matched strings
+            mMatchedWords.clear();
+            mAdapter.notifyDataSetChanged();
+            new FindWordsTask().execute();
+        }
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getSupportMenuInflater();
-		inflater.inflate(R.menu.menu, menu);
-		return true;
-	}
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getSupportMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		int itemId = item.getItemId();
-		if (itemId == R.id.reset) {
-			reset();
-			return true;
-		} else if (itemId == R.id.setminlength) {
-			setMinimumWordLength();
-			return true;
-		} else if (itemId == R.id.about) {
-			showAboutDialog();
-			return true;
-		}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.reset) {
+            reset();
+            return true;
+        } else if (itemId == R.id.setminlength) {
+            setMinimumWordLength();
+            return true;
+        } else if (itemId == R.id.about) {
+            showAboutDialog();
+            return true;
+        }
 
-		return super.onOptionsItemSelected(item);
-	}
+        return super.onOptionsItemSelected(item);
+    }
 
-	private void showAboutDialog() {
-		AboutDialogFragment aboutDialogFragment = (AboutDialogFragment) getSupportFragmentManager().findFragmentByTag(
-				AboutDialogFragment.TAG);
+    private void showAboutDialog() {
+        AboutDialogFragment aboutDialogFragment = (AboutDialogFragment) getSupportFragmentManager().findFragmentByTag(
+                AboutDialogFragment.TAG);
 
-		if (aboutDialogFragment == null) {
-			aboutDialogFragment = AboutDialogFragment.newInstance();
-		}
+        if (aboutDialogFragment == null) {
+            aboutDialogFragment = AboutDialogFragment.newInstance();
+        }
 
-		aboutDialogFragment.show(getSupportFragmentManager(), AboutDialogFragment.TAG);
-	}
+        aboutDialogFragment.show(getSupportFragmentManager(), AboutDialogFragment.TAG);
+    }
 
-	private void setMinimumWordLength() {
-		final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.pick_a_minimum_word_length);
-		builder.setItems(items, new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialog, int item) {
-				mMinWordLength = Integer.valueOf(items[item].toString());
+    private void setMinimumWordLength() {
+        final CharSequence[] items = getResources().getStringArray(R.array.min_word_length_array);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.pick_a_minimum_word_length);
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                mMinWordLength = Integer.valueOf(items[item].toString());
 
-				TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
-				tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
-			}
-		});
-		AlertDialog alert = builder.create();
-		alert.show();
-	}
+                TextView tvMinLength = (TextView) findViewById(R.id.minimum_length_textview);
+                tvMinLength.setText(getString(R.string.current_minimum_word_length_is_d, mMinWordLength));
+            }
+        });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
 
-	private void reset() {
-		EditText e = (EditText) findViewById(R.id.letters_edittext);
-		e.setText("");
-		mMatchedWords.clear();
-		mAdapter.notifyDataSetChanged();
-	}
+    private void reset() {
+        EditText e = (EditText) findViewById(R.id.letters_edittext);
+        e.setText("");
+        mMatchedWords.clear();
+        mAdapter.notifyDataSetChanged();
+    }
 
-	/**
-	 * Checks to see if the word is valid by checking it against the letters.
-	 * 
-	 * @param word
-	 *          - The word to check for extra characters not defined in original letter list
-	 * @return true if the word is valid, false if not
-	 */
-	private boolean checkForDoubles(String word) {
-		boolean valid = true;
-		List<String> chars_in_letters = new ArrayList<String>();
-		List<String> chars_in_word = new ArrayList<String>();
-		for (int i = 0; i < mLetters.length(); i++) {
-			chars_in_letters.add(String.valueOf(mLetters.charAt(i)));
-		}
+    /**
+     * Checks to see if the word is valid by checking it against the letters.
+     *
+     * @param word - The word to check for extra characters not defined in original letter list
+     * @return true if the word is valid, false if not
+     */
+    private boolean checkForDoubles(String word) {
+        boolean valid = true;
+        List<Character> charsInLetters = new ArrayList<Character>();
+        List<Character> charsInWord = new ArrayList<Character>();
 
-		for (int i = 0; i < word.length(); i++) {
-			chars_in_word.add(String.valueOf(word.charAt(i)));
-		}
+        for (int i = 0; i < mLetters.length(); i++) {
+            charsInLetters.add(mLetters.charAt(i));
+        }
 
-		for (Iterator<String> iterator = chars_in_word.iterator(); iterator.hasNext();) {
-			String s = iterator.next();
-			if (chars_in_letters.contains(s)) {
-				chars_in_letters.remove(s);
-			} else {
-				valid = false;
-				break;
-			}
-		}
+        for (int i = 0; i < word.length(); i++) {
+            charsInWord.add(word.charAt(i));
+        }
 
-		return valid;
-	}
+        for (Character s : charsInWord) {
+            if (charsInLetters.contains(s)) {
+                charsInLetters.remove(s);
+            } else {
+                valid = false;
+                break;
+            }
+        }
 
-	/**
-	 * String comparator that checks length of 2 strings.
-	 */
-	private class StringLengthComparator implements Comparator<String> {
-		@Override
-		public int compare(String s1, String s2) {
-			if (s1.length() > s2.length()) {
-				return 1;
-			} else if (s1.length() < s2.length()) {
-				return -1;
-			}
+        return valid;
+    }
 
-			return 0;
-		}
-	}
+    /**
+     * String comparator that checks length of 2 strings.
+     */
+    private class StringLengthComparator implements Comparator<String> {
+        @Override
+        public int compare(String s1, String s2) {
+            if (s1.length() > s2.length()) {
+                return 1;
+            } else if (s1.length() < s2.length()) {
+                return -1;
+            }
 
-	public class FindWordsTask extends AsyncTask<Void, Integer, List<String>> {
+            return 0;
+        }
+    }
 
-		private final ProgressDialog progressDialog;
+    public class FindWordsTask extends AsyncTask<Void, Integer, List<String>> {
 
-		private int mProgressCount = 0;
+        private final ProgressDialog progressDialog;
 
-		public FindWordsTask() {
-			progressDialog = new ProgressDialog(EveryWordHelper.this);
-			progressDialog.setMax(TOTAL_WORDS);
-			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progressDialog.setTitle(getString(R.string.finding_matching_words));
-			progressDialog.setCancelable(false);
-		}
+        private int mProgressCount = 0;
 
-		@Override
-		protected void onPreExecute() {
-			progressDialog.show();
-		}
+        public FindWordsTask() {
+            progressDialog = new ProgressDialog(EveryWordHelper.this);
+            progressDialog.setMax(TOTAL_WORDS);
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setTitle(getString(R.string.finding_matching_words));
+            progressDialog.setCancelable(false);
+        }
 
-		@Override
-		protected List<String> doInBackground(final Void... args) {
-			if (mAllWords == null || mAllWords.isEmpty()) {
-				mAllWords = populateList();
-			}
+        @Override
+        protected void onPreExecute() {
+            progressDialog.show();
+        }
 
-			return getWords(mAllWords);
-		}
+        @Override
+        protected List<String> doInBackground(final Void... args) {
+            if (mAllWords == null || mAllWords.isEmpty()) {
+                mAllWords = populateList();
+            }
 
-		@Override
-		protected void onProgressUpdate(Integer... values) {
-			progressDialog.setProgress(values[0]);
-		}
+            return getWords(mAllWords);
+        }
 
-		@Override
-		protected void onPostExecute(final List<String> result) {
-			if (progressDialog.isShowing()) {
-				progressDialog.dismiss();
-			}
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            progressDialog.setProgress(values[0]);
+        }
 
-			mMatchedWords.clear();
-			mMatchedWords.addAll(result);
-			mAdapter.notifyDataSetChanged();
+        @Override
+        protected void onPostExecute(final List<String> result) {
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
 
-			String toastMessage = null;
-			if (mMatchedWords.isEmpty()) {
-				toastMessage = getString(R.string.no_words_found);
-			} else {
-				toastMessage = getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, mMatchedWords.size());
-			}
+            mMatchedWords.clear();
+            mMatchedWords.addAll(result);
+            mAdapter.notifyDataSetChanged();
 
-			Toast.makeText(getApplicationContext(), toastMessage, Toast.LENGTH_LONG).show();
-		}
+            String toastMessage;
+            if (mMatchedWords.isEmpty()) {
+                toastMessage = getString(R.string.no_words_found);
+            } else {
+                toastMessage = getString(R.string.found_words_touch_a_word_to_remove_it_from_the_list, mMatchedWords.size());
+            }
 
-		/**
-		 * Gets all the words defined in the 2+2gfreq word list used by Every Word.
-		 * 
-		 * @return All words as strings in a List.
-		 */
-		private List<String> populateList() {
+            Toast.makeText(EveryWordHelper.this, toastMessage, Toast.LENGTH_LONG).show();
+        }
 
-			InputStream is = new BufferedInputStream(getResources().openRawResource(R.raw.twoplustwogfreq_parsed), 8192);
-			BufferedReader br = new BufferedReader(new InputStreamReader(is), 8192);
+        /**
+         * Gets all the words defined in the 2+2gfreq word list used by Every Word.
+         *
+         * @return All words as strings in a List.
+         */
+        private List<String> populateList() {
 
-			List<String> lines = new ArrayList<String>();
-			String line = null;
-			try {
-				while ((line = br.readLine()) != null) {
-					lines.add(line);
-				}
-				br.close();
-				is.close();
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
+            InputStream is = new BufferedInputStream(getResources().openRawResource(R.raw.twoplustwogfreq_parsed), 8192);
+            BufferedReader br = new BufferedReader(new InputStreamReader(is), 8192);
 
-			return lines;
-		}
+            List<String> lines = new ArrayList<String>();
+            String line;
+            try {
+                while ((line = br.readLine()) != null) {
+                    lines.add(line);
+                }
+                br.close();
+                is.close();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
 
-		/**
-		 * Performs the regex matching of the user supplied letters against the 2+2gfreq word list.
-		 * 
-		 * @param allWords
-		 *          - Parsed results of 2+2gfreq word list.
-		 * @return
-		 */
-		private List<String> getWords(final List<String> allWords) {
-			List<String> ret = new ArrayList<String>();
+            return lines;
+        }
 
-			String word;
-			String regex3 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "]";
-			String regex4 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]";
-			String regex5 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]";
-			String regex6 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]["
-					+ mLetters + "]";
-			String regex7 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]["
-					+ mLetters + "][" + mLetters + "]";
+        /**
+         * Performs the regex matching of the user supplied letters against the 2+2gfreq word list.
+         *
+         * @param allWords - Parsed results of 2+2gfreq word list.
+         * @return The list of matching words
+         */
+        private List<String> getWords(final List<String> allWords) {
+            List<String> ret = new ArrayList<String>();
 
-			for (Iterator<String> iterator = allWords.iterator(); iterator.hasNext();) {
-				word = iterator.next();
-				boolean matched = false;
-				switch (word.length()) {
-				case 3:
-					if (mMinWordLength == 3 && word.matches(regex3)) {
-						matched = true;
-					}
-					break;
-				case 4:
-					if (word.matches(regex4)) {
-						matched = true;
-					}
-					break;
-				case 5:
-					if (word.matches(regex5)) {
-						matched = true;
-					}
-					break;
-				case 6:
-					if (word.matches(regex6)) {
-						matched = true;
-					}
-					break;
-				case 7:
-					if (mLetters.length() == MAX_WORD_LENGTH && word.matches(regex7)) {
-						matched = true;
-					}
-					break;
-				default:
-					break;
-				}
+            String regex3 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "]";
+            String regex4 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]";
+            String regex5 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]";
+            String regex6 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]["
+                    + mLetters + "]";
+            String regex7 = "[" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "][" + mLetters + "]["
+                    + mLetters + "][" + mLetters + "]";
 
-				if (matched && checkForDoubles(word)) {
-					ret.add(word);
-					Log.d(TAG, word);
-				}
-				matched = false;
-				onProgressUpdate(mProgressCount++);
-			}
+            boolean matched = false;
+            for (String word : allWords) {
+                if (word == null) {
+                    continue;
+                }
 
-			Collections.sort(ret, new StringLengthComparator());
-			removeDuplicateWithOrder(ret);
+                switch (word.length()) {
+                    case 3:
+                        if (mMinWordLength == 3 && word.matches(regex3)) {
+                            matched = true;
+                        }
+                        break;
+                    case 4:
+                        if (word.matches(regex4)) {
+                            matched = true;
+                        }
+                        break;
+                    case 5:
+                        if (word.matches(regex5)) {
+                            matched = true;
+                        }
+                        break;
+                    case 6:
+                        if (word.matches(regex6)) {
+                            matched = true;
+                        }
+                        break;
+                    case 7:
+                        if (mLetters.length() == MAX_WORD_LENGTH && word.matches(regex7)) {
+                            matched = true;
+                        }
+                        break;
+                    default:
+                        break;
+                }
 
-			return ret;
-		}
+                if (matched && checkForDoubles(word)) {
+                    ret.add(word);
+                    // Log.d(TAG, word);
+                }
+                matched = false;
+                onProgressUpdate(mProgressCount++);
+            }
 
-		/**
-		 * Uses a Set to see if a previous instance of this word has already been added.
-		 * @param words
-		 *
-		 */
-		public void removeDuplicateWithOrder(List<String> words) {
-			Set<String> removeDupesSet = new LinkedHashSet<String>(words);
-			words.clear();
-			words.addAll(removeDupesSet);
-		}
-	}
+            Collections.sort(ret, new StringLengthComparator());
+            removeDuplicateWithOrder(ret);
+
+            return ret;
+        }
+
+        /**
+         * Uses a Set to see if a previous instance of this word has already been added.
+         *
+         * @param words List of words to remove duplicates from
+         */
+        public void removeDuplicateWithOrder(List<String> words) {
+            Set<String> removeDupesSet = new LinkedHashSet<String>(words);
+            words.clear();
+            words.addAll(removeDupesSet);
+        }
+    }
 }
