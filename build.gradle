@@ -4,11 +4,9 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.9.+'
-        classpath 'com.newrelic.agent.android:agent-gradle-plugin:3.+'
     }
 }
 apply plugin: 'android'
-//apply plugin: 'newrelic'
 
 repositories {
     mavenCentral()
@@ -17,7 +15,6 @@ repositories {
 dependencies {
     compile 'com.google.guava:guava:16.+'
     compile 'com.google.code.findbugs:jsr305:2.+'
-    compile 'com.newrelic.agent.android:android-agent:3.+'
     compile 'com.actionbarsherlock:actionbarsherlock:4.4.0@aar'
     compile 'com.android.support:support-v4:19.+'
 }

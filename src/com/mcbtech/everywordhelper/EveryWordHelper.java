@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Editable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,7 +41,6 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.newrelic.agent.android.NewRelic;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -87,8 +85,6 @@ public class EveryWordHelper extends SherlockFragmentActivity implements OnClick
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-
-        NewRelic.withApplicationToken(getString(R.string.new_relic_app_id)).start(this.getApplication());
 
         if (savedInstanceState != null) {
             mLetters = SaveStateHelper.restoreLetters(savedInstanceState);
