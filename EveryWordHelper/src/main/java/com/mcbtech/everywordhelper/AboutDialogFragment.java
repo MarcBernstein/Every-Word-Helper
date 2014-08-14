@@ -17,6 +17,7 @@ package com.mcbtech.everywordhelper;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +41,7 @@ public class AboutDialogFragment extends SherlockDialogFragment {
 	}
 
 	@Override
+    @NonNull
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		Dialog dialog = super.onCreateDialog(savedInstanceState);
 		dialog.setTitle(R.string.about_title);
