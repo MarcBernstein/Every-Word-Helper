@@ -25,18 +25,18 @@ proguard/
 res/values/app_config.xml
 
 # Android Studio
-.idea/
+.idea/workspace.xml
+/.idea/libraries
+/.idea/dictionaries
 .gradle
 /*/local.properties
 /*/out
 /*/*/build
 /*/*/production
-*.iml
-*.iws
-*.ipr
 *~
 *.swp
 gradlew*
 gradle-app.setting
 /build
-/gradle
+
+build
