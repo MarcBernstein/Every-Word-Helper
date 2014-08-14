@@ -2,6 +2,7 @@
 local.properties
 
 # Android Studio
+.gradle
 .idea/workspace.xml
 /.idea/libraries
 /.idea/dictionaries
